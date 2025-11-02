@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import fetch from "node-fetch"; // If using Node 18+, native fetch works — otherwise npm install node-fetch
 
 const app = express();
 app.use(express.json());
@@ -25,13 +26,27 @@ app.get("/sse", (req, res) => {
             additionalProperties: false,
           },
         },
+        {
+          name: "send_to_zapier",
+          description: "Sends parsed itinerary data to Zapier webhook for email delivery.",
+          input_schema: {
+            type: "object",
+            properties: {
+              to: { type: "string" },
+              subject: { type: "string" },
+              html_body: { type: "string" },
+            },
+            required: ["to", "subject", "html_body"],
+            additionalProperties: false,
+          },
+        },
       ],
     })}\n\n`
   );
   res.end();
 });
 
-// Step 2: Handle MCP tool call
+// Step 2: Handle parsing
 app.post("/parse_trip_request", async (req, res) => {
   const { input_as_text } = req.body;
 
@@ -65,6 +80,31 @@ app.post("/parse_trip_request", async (req, res) => {
   };
 
   res.json(parsedResult);
+});
+
+// Step 3: Handle sending to Zapier
+app.post("/send_to_zapier", async (req, res) => {
+  const { to, subject, html_body } = req.body;
+
+  if (!to || !subject || !html_body) {
+    return res.status(400).json({ error: "Missing one or more required fields" });
+  }
+
+  const zapierWebhookUrl = "https://hooks.zapier.com/hooks/catch/XXXXXXX/YYYYYYY"; // 🔁 replace with your actual Zapier Webhook URL
+
+  try {
+    const response = await fetch(zapierWebhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to, subject, html_body }),
+    });
+
+    const zapierResponse = await response.text();
+    res.json({ success: true, zapier_response: zapierResponse });
+  } catch (err) {
+    console.error("❌ Error sending to Zapier:", err);
+    res.status(500).json({ error: "Failed to send data to Zapier" });
+  }
 });
 
 // Optional health check
