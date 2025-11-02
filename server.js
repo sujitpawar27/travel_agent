@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import fetch from "node-fetch"; // If using Node 18+, native fetch works — otherwise npm install node-fetch
+import fetch from "node-fetch";
 
 const app = express();
 app.use(express.json());
@@ -28,7 +28,8 @@ app.get("/sse", (req, res) => {
         },
         {
           name: "send_to_zapier",
-          description: "Sends parsed itinerary data to Zapier webhook for email delivery.",
+          description:
+            "Sends parsed itinerary data to Zapier webhook for email delivery.",
           input_schema: {
             type: "object",
             properties: {
@@ -87,10 +88,13 @@ app.post("/send_to_zapier", async (req, res) => {
   const { to, subject, html_body } = req.body;
 
   if (!to || !subject || !html_body) {
-    return res.status(400).json({ error: "Missing one or more required fields" });
+    return res
+      .status(400)
+      .json({ error: "Missing one or more required fields" });
   }
 
-  const zapierWebhookUrl = "https://hooks.zapier.com/hooks/catch/XXXXXXX/YYYYYYY"; // 🔁 replace with your actual Zapier Webhook URL
+  const zapierWebhookUrl =
+    "https://hooks.zapier.com/hooks/catch/25217413/uivr7u5/";
 
   try {
     const response = await fetch(zapierWebhookUrl, {
