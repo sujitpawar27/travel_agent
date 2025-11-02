@@ -6,30 +6,29 @@ app.use(express.json());
 app.use(cors());
 
 // Step 1: List MCP tools
-app.get("/", (req, res) => {
-  res.json({
-    type: "mcp_list_tools",
-    server_label: "travel_mcp",
-    tools: [
-      {
-        name: "parse_trip_request",
-        description:
-          "Parses a natural language travel request into structured trip details (destination, dates, budget, interests, email).",
-        input_schema: {
-          $schema: "https://json-schema.org/draft/2020-12/schema",
-          type: "object",
-          properties: {
-            input_as_text: {
-              type: "string",
-              description: "User's natural language travel request text.",
+app.get("/sse", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.write(
+    `data: ${JSON.stringify({
+      tools: [
+        {
+          name: "parse_trip_request",
+          description:
+            "Parses a natural language travel request into structured trip details (destination, dates, budget, interests, email).",
+          input_schema: {
+            $schema: "https://json-schema.org/draft/2020-12/schema",
+            type: "object",
+            properties: {
+              input_as_text: { type: "string" },
             },
+            required: ["input_as_text"],
+            additionalProperties: false,
           },
-          required: ["input_as_text"],
-          additionalProperties: false,
         },
-      },
-    ],
-  });
+      ],
+    })}\n\n`
+  );
+  res.end();
 });
 
 // Step 2: Handle MCP tool call
